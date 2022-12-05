@@ -1,143 +1,188 @@
-*{
-    margin: 0;
-    padding: 0;
+let BJgame = {
+    'you': {'scoreSpan': '#yourscore' , 'div': '#your-box', 'score': 0},
+    'dealer': {'scoreSpan': '#dealerscore' , 'div': '#dealer-box', 'score': 0},
+    
+    'cards': ['2C','3C','4C','5C','6C','7C','8C','9C','10C','KC','QC','JC','AC','2D','3D','4D','5D','6D','7D','8D','9D','10D','KD','QD','JD','AD','2H','3H','4H','5H','6H','7H','8H','9H','10H','KH','QH','JH','AH','2S','3S','4S','5S','6S','7S','8S','9S','10S','KS','QS','JS','AS'],
+    
+    'cardsmap': {'2C':2,'3C':3,'4C':4,'5C':5,'6C':6,'7C':7,'8C':8,'9C':9,'10C':10,'KC':10,'QC':10,'JC':10,'AC':[1, 11],'2D':2,'3D':3,'4D':4,'5D':5,'6D':6,'7D':7,'8D':8,'9D':9,'10D':10,'KD':10,'QD':10,'JD':10,'AD':[1, 11],'2H':2,'3H':3,'4H':4,'5H':5,'6H':6,'7H':7,'8H':8,'9H':9,'10H':10,'KH':10,'QH':10,'JH':10,'AH':[1, 11],'2S':2,'3S':3,'4S':4,'5S':5,'6S':6,'7S':7,'8S':8,'9S':9,'10S':10,'KS':10,'QS':10,'JS':10,'AS':[1, 11]},
+
+    'wins':0,
+    'losses':0,
+    'draws':0
+};
+const You = BJgame['you'];
+const Dealer = BJgame['dealer'];
+
+const tink = new Audio('./static/sounds/tink.wav');
+
+function drawCard(activeplayer) {
+    const randomNumber = Math.floor(Math.random() * (BJgame['cards'].length));
+    const currentCard = BJgame['cards'].splice(randomNumber, 1);
+    let card = document.createElement('img');
+    card.src = `./static/${currentCard}.png`;
+    document.querySelector(activeplayer['div']).appendChild(card);
+    hitsound.play();
+    
+    // Update Score
+    updateScore(currentCard, activeplayer);
+
+    // Show Score
+    showScore(activeplayer);
+    
 }
 
-html{
-    font-size: 62.5%;
-    /* 10px and default 1rem=16px */
+function updateScore(currentcard, activeplayer){
+    // For Ace
+    if(currentcard == 'AC' || currentcard == 'AD' || currentcard == 'AH' || currentcard == 'AS'){
+        if((activeplayer['score'] + BJgame['cardsmap'][currentcard][1]) <= 21){
+
+            activeplayer['score'] += BJgame['cardsmap'][currentcard][1];
+        }
+        else{
+            activeplayer['score'] += BJgame['cardsmap'][currentcard][0];
+        }
+    }
+    else{  //For Other Cases
+        activeplayer['score'] += BJgame['cardsmap'][currentcard];
+    }   
 }
 
-.title{
-    text-align: center;
-    background: rgb(232,224,117);
-    background: linear-gradient(0deg, rgba(232,224,117,1) 0%, rgba(1,1,1,1) 15%);
-    color: gold;
-    /* font-family: 'Lobster', cursive; */
-    font-family: 'Pushster', cursive;
-    /* font-family: 'Ubuntu', sans-serif; */
-    padding: .5rem;
-    font-size: 8rem;
-    word-spacing: 2rem;
-    letter-spacing: .3rem;
-}
-
-#command {
-    font-family: 'Vujahday Script', cursive;
-    font-weight: 800;
-    font-size: 3.5rem;
-    word-spacing: 1rem;
-    animation: blinker 2s step-start infinite;
-}
-@keyframes blinker {
-    25% {
-      opacity: 0;
+function showScore(activeplayer){
+    if(activeplayer['score']>21){
+        document.querySelector(activeplayer['scoreSpan']).textContent = 'BUST!';
+        document.querySelector(activeplayer['scoreSpan']).style.color = 'yellow';
+    }
+    else{
+        document.querySelector(activeplayer['scoreSpan']).textContent = activeplayer['score'];
     }
 }
 
-.main{
-    margin: auto;
-    text-align: center;
+// Compute Winner Function
+function findwinner(){
+    let winner;
+
+    if(You['score']<=21){
+        if(Dealer['score']<You['score'] || Dealer['score']>21){
+            BJgame['wins']++;
+            winner = You;
+        }
+        else if(Dealer['score'] == You['score']){
+            BJgame['draws']++;
+        }
+        else{
+            BJgame['losses']++;
+            winner = Dealer;
+        }
+    }
+    else if(You['score']>21 && Dealer['score']<=21){
+        BJgame['losses']++;
+        winner = Dealer;
+    }
+    else if(You['score']>21 && Dealer['score']>21){
+        BJgame['draws']++;
+    }
+    return winner;
 }
 
-.row1{
-    display: flex;
-    flex-wrap: wrap;
-    flex-direction: row;
-    justify-content: space-around;
-    padding: 1rem;
-    border-bottom: black solid .1rem;
-    height: 50rem;
+// Results
+const winSound = new Audio('./resources/sounds/cash.mp3'); 
+const cheers = new Audio('./resources/sounds/cheer.wav');
+const loseSound = new Audio('./resources/sounds/aww.mp3');
+const drawSound = new Audio('./resources/sounds/ohh.mp3');
+
+function showresults(winner){
+    if(winner == You){
+        document.querySelector('#command').textContent = 'You Won!';
+        document.querySelector('#command').style.color = 'green';
+        winSound.play();
+        cheers.play();
+        cheers.volume = 0.4;
+    }
+    else if(winner == Dealer){
+        document.querySelector('#command').textContent = "You Lost!";
+        document.querySelector('#command').style.color = 'red';
+        loseSound.play();
+    }
+    else{
+        document.querySelector('#command').textContent = 'You Drew!';
+        document.querySelector('#command').style.color = 'orange';
+        drawSound.play();
+    }
+
 }
 
-.row1 ,.row2{
-    background: url('./static/table.jpg') no-repeat center center/cover;
-    width: auto;
-    color: whitesmoke;
+// Scoreboard
+function scoreboard(){
+    document.querySelector('#wins').textContent = BJgame['wins'];
+    document.querySelector('#losses').textContent = BJgame['losses'];
+    document.querySelector('#draws').textContent = BJgame['draws'];
 }
 
-.row1 div{
-    padding: 1rem;
-    text-align: center;
-    flex: 1;
-}
+// Hit Button (starting)
+document.querySelector('#hit').addEventListener('click', BJhit);
 
-.row1 h2{
-    font-family: 'Lobster', cursive;
-    font-size: 4rem;
-}
+const hitsound = new Audio('./static/sounds/swish.m4a');
 
-#your-box{
-    border-right: black solid 1px;
-}
-
-#your-box img, #dealer-box img{
-    height: 20rem;
-    width: 13rem;
-    padding: 1rem;
-}
-
-.row2{
-    display: flex;
-    justify-content: space-around;
-    margin-bottom: 3rem;
-}
-
-.buttons{
-    display: flex;
-    flex-wrap: wrap;
-    flex-direction: row;
-    justify-content: space-around;
-    width: 55%;
-}
-
-.buttons button{
-    font-size: 2.2rem;
-    font-weight: 700;
-    font-family: 'Lobster', cursive;
-    padding-left: 2rem;
-    padding-right: 2rem;
-    padding-top: .2rem;
-    padding-bottom: .2rem;
-    margin: 1.5rem;
-}
-
-.buttons button:hover{
-    cursor: pointer;
-    box-shadow: black 0px 0px 5px 2px;
-}
-
-.row3 h3{
-    font-family: 'Teko', sans-serif;
-    font-size: 4rem;
-}
-
-.row3{
-    margin: auto;
-}
-
-table, th, td{
-    padding: .5rem;
-    border: solid 2px black;
-    font-size: 3rem;
-    font-family: 'Teko', sans-serif;
-    font-weight: 400;
-    padding-left: 3rem;
-    padding-right: 3rem;
-}
-
-table{
-    margin: auto;
-    margin-bottom: 5rem;
-}
-
-@media screen and (max-width:740px){
-    html{
-        font-size: 40%;
+function BJhit(){
+    if(Dealer['score'] === 0){
+        if(You['score']<=21){
+            drawCard(You);
+        }
     }
 }
-@media screen and (max-width:420px){
-    html{
-        font-size: 30%;
+
+// Deal Button
+document.querySelector('#deal').addEventListener('click', BJdeal);
+
+function BJdeal(){
+
+    if(You['score']=== 0){
+        alert('Please Hit Some Cards First!');
+    }
+    else if(Dealer['score']===0){
+        alert('Please Press Stand Key Before Deal...');
+    }
+    else{
+
+    let yourimg = document.querySelector('#your-box').querySelectorAll('img');
+    let dealerimg = document.querySelector('#dealer-box').querySelectorAll('img');
+    
+    for(let i=0; i<yourimg.length; i++){
+        yourimg[i].remove();
+    }
+    for(let i=0; i<dealerimg.length; i++){
+        dealerimg[i].remove();
+    }
+
+    BJgame['cards'] = ['2C','3C','4C','5C','6C','7C','8C','9C','10C','KC','QC','JC','AC','2D','3D','4D','5D','6D','7D','8D','9D','10D','KD','QD','JD','AD','2H','3H','4H','5H','6H','7H','8H','9H','10H','KH','QH','JH','AH','2S','3S','4S','5S','6S','7S','8S','9S','10S','KS','QS','JS','AS'];
+
+    You['score'] = 0;
+    document.querySelector(You['scoreSpan']).textContent = You['score'];
+    document.querySelector(You['scoreSpan']).style.color = 'whitesmoke';
+    Dealer['score'] = 0;
+    document.querySelector(Dealer['scoreSpan']).textContent = Dealer['score'];
+    document.querySelector(Dealer['scoreSpan']).style.color = 'whitesmoke';
+
+    document.querySelector('#command').textContent = "Let's Play";
+    document.querySelector('#command').style.color = 'black';
     }
 }
+
+// Dealer's Logic (2nd player) OR Stand button
+document.querySelector('#stand').addEventListener('click', BJstand)
+
+function BJstand(){
+    if(You['score']===0){
+        alert('Please Hit Some Cards First!');
+    }
+    else{
+        while(Dealer['score']<16){
+            drawCard(Dealer);
+        }
+        setTimeout(function(){
+            showresults(findwinner());
+            scoreboard();
+        }, 800); 
+    }
+}
+
