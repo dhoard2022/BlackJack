@@ -13,13 +13,13 @@ let BJgame = {
 const You = BJgame['you'];
 const Dealer = BJgame['dealer'];
 
-const tink = new Audio('./static/sounds/tink.wav');
+const tink = new Audio('./resources/sounds/tink.wav');
 
 function drawCard(activeplayer) {
     const randomNumber = Math.floor(Math.random() * (BJgame['cards'].length));
     const currentCard = BJgame['cards'].splice(randomNumber, 1);
     let card = document.createElement('img');
-    card.src = `./static/${currentCard}.png`;
+    card.src = `./resources/${currentCard}.png`;
     document.querySelector(activeplayer['div']).appendChild(card);
     hitsound.play();
     
@@ -121,7 +121,7 @@ function scoreboard(){
 // Hit Button (starting)
 document.querySelector('#hit').addEventListener('click', BJhit);
 
-const hitsound = new Audio('./static/sounds/swish.m4a');
+const hitsound = new Audio('./resources/sounds/swish.m4a');
 
 function BJhit(){
     if(Dealer['score'] === 0){
